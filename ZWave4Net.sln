@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2018
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ZWave", "ZWave\ZWave.shproj", "{91E0AE62-9C57-4210-B3DA-3EBD2E699C92}"
 EndProject
@@ -41,11 +41,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{0E5FFE0D-8
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZWaveControllerSample (core)", "Samples\core\ZWaveControllerSample (core)\ZWaveControllerSample (core).csproj", "{D4C8B1B4-D21A-46DE-AFAB-0F756D299FD5}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ZWaveNetFramework", "ZWaveNetFramework\ZWaveNetFramework.shproj", "{2CCA2114-A088-4EB6-9E96-4913F5FD829C}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		ZWaveNetFramework\ZWaveNetFramework.projitems*{2cca2114-a088-4eb6-9e96-4913f5fd829c}*SharedItemsImports = 13
 		ZWave\ZWave.projitems*{91e0ae62-9c57-4210-b3da-3ebd2e699c92}*SharedItemsImports = 13
 		ZWave\ZWave.projitems*{96b37a40-4227-4063-8008-06bb65862806}*SharedItemsImports = 4
 		ZWave\ZWave.projitems*{a3a5cf86-813c-4167-96dd-d9a56743f470}*SharedItemsImports = 4
+		ZWaveNetFramework\ZWaveNetFramework.projitems*{d718b815-21b9-4195-befc-e57886e254e4}*SharedItemsImports = 4
 		ZWave\ZWave.projitems*{d718b815-21b9-4195-befc-e57886e254e4}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -285,6 +289,7 @@ Global
 		{78066960-CBBC-4BE1-89F9-DFCCF159B205} = {15C4E1D5-BC8A-4039-B9DC-6193CB10A752}
 		{0E5FFE0D-8527-40CB-8C69-DEB62A4D50FA} = {13646915-2614-40CE-93BE-C57691FA4D06}
 		{D4C8B1B4-D21A-46DE-AFAB-0F756D299FD5} = {0E5FFE0D-8527-40CB-8C69-DEB62A4D50FA}
+		{2CCA2114-A088-4EB6-9E96-4913F5FD829C} = {AF4919C6-8D7B-48BE-BF56-373344956BE1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B91231ED-3737-432A-B80D-AB2092E927F8}

@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace ZWave.Channel
 {
-#if NET
     public class SerialPort : ISerialPort
     {
         private readonly System.IO.Ports.SerialPort _port;
@@ -39,5 +33,4 @@ namespace ZWave.Channel
             _port.Close();
         }
     }
-#endif
 }
