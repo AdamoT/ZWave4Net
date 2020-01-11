@@ -5,19 +5,45 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using ZWave.Channel;
 
 namespace ZWave
 {
-    public class ZWaveController
+    public sealed class ZWaveController : IDisposable
     {
-        private Task<NodeCollection> _getNodes;
-        private string _version;
-        private uint? _homeID;
-        private byte? _nodeID;
-        public readonly ZWaveChannel Channel;
+        #region IDisposable
+
+        public void Dispose()
+        {
+            Close();
+        }
+
+        #endregion IDisposable
+
+        #region Properties
+
+        public ZWaveChannel Channel { get; }
+
+        #endregion Properties
+
+        #region Fields
+
+        private Task<IReadOnlyList<Node>> _GetNodesTask = null;
+        private string _ControllerVersion = null;
+        private uint? _ControllerHomeID;
+        private byte? _ControllerNodeID;
+
+        #endregion Fields
+
+        #region Events
+
         public event EventHandler<ErrorEventArgs> Error;
         public event EventHandler ChannelClosed;
+
+        #endregion Events
+
+        #region Constructors
 
         private ZWaveController(ZWaveChannel channel)
         {
@@ -43,12 +69,14 @@ namespace ZWave
         }
 #endif
 
-        protected virtual void OnError(ErrorEventArgs e)
+        #endregion Constructors
+
+        private void OnError(ErrorEventArgs e)
         {
             Error?.Invoke(this, e);
         }
 
-        protected virtual void OnChannelClosed(EventArgs e)
+        private void OnChannelClosed(EventArgs e)
         {
             ChannelClosed?.Invoke(this, e);
         }
@@ -76,14 +104,16 @@ namespace ZWave
         {
             try
             {
-                var nodes = await GetNodes();
+                var nodes = await GetNodes()
+                    .ConfigureAwait(false);
+
                 var target = nodes[e.NodeID];
                 if (target != null)
                 {
                     target.HandleEvent(e.Command);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 OnError(new ErrorEventArgs(ex));
             }
@@ -93,7 +123,9 @@ namespace ZWave
         {
             try
             {
-                var nodes = await GetNodes();
+                var nodes = await GetNodes()
+                    .ConfigureAwait(false);
+
                 var target = nodes[e.NodeID];
                 if (target != null)
                 {
@@ -108,10 +140,13 @@ namespace ZWave
 
         public void Close()
         {
-            Channel.Error -= Channel_Error;
-            Channel.NodeEventReceived -= Channel_NodeEventReceived;
-            Channel.NodeUpdateReceived -= Channel_NodeUpdateReceived;
-            Channel.Close();
+            if (Channel != null)
+            {
+                Channel.Error -= Channel_Error;
+                Channel.NodeEventReceived -= Channel_NodeEventReceived;
+                Channel.NodeUpdateReceived -= Channel_NodeUpdateReceived;
+                Channel.Close();
+            }
         }
 
         public Task<string> GetVersion()
@@ -121,13 +156,15 @@ namespace ZWave
 
         public async Task<string> GetVersion(CancellationToken cancellationToken)
         {
-            if (_version == null)
+            if (_ControllerVersion == null)
             {
-                var response = await Channel.Send(Function.GetVersion, cancellationToken);
+                var response = await Channel.Send(Function.GetVersion, cancellationToken)
+                    .ConfigureAwait(false);
+
                 var data = response.TakeWhile(element => element != 0).ToArray();
-                _version = Encoding.UTF8.GetString(data, 0, data.Length);
+                _ControllerVersion = Encoding.UTF8.GetString(data, 0, data.Length);
             }
-            return _version;
+            return _ControllerVersion;
         }
 
         public Task<uint> GetHomeID()
@@ -137,12 +174,14 @@ namespace ZWave
 
         public async Task<uint> GetHomeID(CancellationToken cancellationToken)
         {
-            if (_homeID == null)
+            if (_ControllerHomeID == null)
             {
-                var response = await Channel.Send(Function.MemoryGetId, cancellationToken);
-                _homeID = PayloadConverter.ToUInt32(response);
+                var response = await Channel.Send(Function.MemoryGetId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                _ControllerHomeID = PayloadConverter.ToUInt32(response);
             }
-            return _homeID.Value;
+            return _ControllerHomeID.Value;
         }
 
         public Task<byte> GetNodeID()
@@ -152,27 +191,29 @@ namespace ZWave
 
         public async Task<byte> GetNodeID(CancellationToken cancellationToken)
         {
-            if (_nodeID == null)
+            if (_ControllerNodeID == null)
             {
-                var response = await Channel.Send(Function.MemoryGetId, cancellationToken);
-                _nodeID = response[4];
+                var response = await Channel.Send(Function.MemoryGetId, cancellationToken)
+                    .ConfigureAwait(false);
+                _ControllerNodeID = response[4];
             }
-            return _nodeID.Value;
+            return _ControllerNodeID.Value;
         }
 
-        public Task<NodeCollection> DiscoverNodes()
+        public Task<IReadOnlyList<Node>> DiscoverNodes()
         {
             return DiscoverNodes(CancellationToken.None);
         }
 
-        public Task<NodeCollection> DiscoverNodes(CancellationToken cancellationToken)
+        public Task<IReadOnlyList<Node>> DiscoverNodes(CancellationToken cancellationToken)
         {
-            return _getNodes = Task.Run(async () =>
+            return _GetNodesTask = Task.Run(async () =>
             {
-                var response = await Channel.Send(Function.DiscoveryNodes, cancellationToken);
+                var response = await Channel.Send(Function.DiscoveryNodes, cancellationToken)
+                    .ConfigureAwait(false);
                 var values = response.Skip(3).Take(29).ToArray();
 
-                var nodes = new NodeCollection();
+                var nodes = new List<Node>();
                 var bits = new BitArray(values);
                 for (byte i = 0; i < bits.Length; i++)
                 {
@@ -182,18 +223,18 @@ namespace ZWave
                         nodes.Add(node);
                     }
                 }
-                return nodes;
+                return nodes as IReadOnlyList<Node>;
             });
         }
 
-        public Task<NodeCollection> GetNodes()
+        public Task<IReadOnlyList<Node>> GetNodes()
         {
             return GetNodes(CancellationToken.None);
         }
 
-        public async Task<NodeCollection> GetNodes(CancellationToken cancellationToken)
+        public Task<IReadOnlyList<Node>> GetNodes(CancellationToken cancellationToken)
         {
-            return await (_getNodes ?? (_getNodes = DiscoverNodes(cancellationToken)));
+            return (_GetNodesTask ?? DiscoverNodes(cancellationToken));
         }
     }
 }
