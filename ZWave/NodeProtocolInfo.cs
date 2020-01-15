@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ZWave
 {
     public class NodeProtocolInfo
     {
+        #region Properties
+
         public byte Capability { get; private set; }
         public byte Reserved { get; private set; }
         public BasicType BasicType { get; private set; }
@@ -13,10 +14,27 @@ namespace ZWave
         public byte SpecificType { get; private set; }
         public Security Security { get; private set; }
 
+        public bool Routing => (Capability & 0x40) != 0;
+        public bool IsListening => (Capability & 0x80) != 0;
+        public byte Version => (byte)((Capability & 0x07) + 1);
+        public int MaxBaudrate => ((Capability & 0x38) == 0x10) ? 40000 : 9600;
+
+        public IReadOnlyList<byte> Bytes { get; private set; }
+
+        #endregion Properties
+
+        #region Public Methods
+
         public static NodeProtocolInfo Parse(byte[] data)
         {
+            if (data is null)
+                throw new ArgumentNullException(nameof(data));
+            if (data.Length < 6)
+                throw new ArgumentException("At least 6 bytes required", nameof(data));
+
             return new NodeProtocolInfo()
             {
+                Bytes = data,
                 Capability = data[0],
                 Security = (Security)data[1],
                 Reserved = data[2],
@@ -26,29 +44,11 @@ namespace ZWave
             };
         }
 
-        public bool Routing
-        {
-            get { return (Capability & 0x40) != 0; }
-        }
-
-        public bool IsListening
-        {
-            get { return (Capability & 0x80) != 0; }
-        }
-
-        public byte Version
-        {
-            get { return (byte)((Capability & 0x07) + 1); }
-        }
-
-        public int MaxBaudrate
-        {
-            get { return ((Capability & 0x38) == 0x10) ? 40000 : 9600; }
-        }
-
         public override string ToString()
         {
             return $"GenericType = {GenericType}, BasicType = {BasicType}, Listening = {IsListening}, Version = {Version}, Security = [{Security}], Routing = {Routing}, MaxBaudrate = {MaxBaudrate}";
         }
+
+        #endregion Public Methods
     }
 }

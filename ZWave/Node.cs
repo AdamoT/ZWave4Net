@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ZWave.CommandClasses;
-using ZWave.Channel;
+﻿using System;
 using System.Collections;
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+
+using ZWave.Channel;
+using ZWave.CommandClasses;
 
 namespace ZWave
 {
@@ -71,7 +72,7 @@ namespace ZWave
             get { return Controller.Channel; }
         }
 
-        public T GetCommandClass<T>()  where T : ICommandClass
+        public T GetCommandClass<T>() where T : ICommandClass
         {
             return _commandClasses.OfType<T>().FirstOrDefault();
         }
@@ -99,7 +100,7 @@ namespace ZWave
             }
 
             _commandClassVersions = commandClassVersions;
-            lock(_commandClassVersions)
+            lock (_commandClassVersions)
             {
                 return _commandClassVersions.Values.Where(r => r.Version > 0).ToArray();
             }
@@ -112,7 +113,8 @@ namespace ZWave
 
         public async Task<NodeProtocolInfo> GetProtocolInfo(CancellationToken cancellationToken)
         {
-            var response = await Channel.Send(Function.GetNodeProtocolInfo, cancellationToken, NodeID);
+            var response = await Channel.Send(Function.GetNodeProtocolInfo, cancellationToken, NodeID)
+                .ConfigureAwait(false);
             return NodeProtocolInfo.Parse(response);
         }
 
@@ -133,7 +135,7 @@ namespace ZWave
                 if (payload[0] == functionID)
                 {
                     // yes, so parse status
-                    var status =(NeighborUpdateStatus)payload[1];
+                    var status = (NeighborUpdateStatus)payload[1];
 
                     // if callback delegate provided then invoke with progress 
                     progress?.Invoke(status);
@@ -202,7 +204,7 @@ namespace ZWave
 
         internal async Task<VersionCommandClassReport> GetCommandClassVersionReport(CommandClass commandClass, CancellationToken cancellationToken)
         {
-            lock(_commandClassVersions)
+            lock (_commandClassVersions)
             {
                 if (_commandClassVersions.ContainsKey(commandClass))
                     return _commandClassVersions[commandClass];
@@ -239,7 +241,7 @@ namespace ZWave
             MessageReceived?.Invoke(this, EventArgs.Empty);
             OnUpdateReceived(EventArgs.Empty);
         }
-        
+
         protected virtual void OnUpdateReceived(EventArgs args)
         {
             UpdateReceived?.Invoke(this, args);
