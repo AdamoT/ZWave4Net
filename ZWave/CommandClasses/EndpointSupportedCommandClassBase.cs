@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using ZWave.Channel;
 using ZWave.Channel.Protocol;
 
@@ -9,7 +10,7 @@ namespace ZWave.CommandClasses
 {
     public abstract class EndpointSupportedCommandClassBase : CommandClassBase
     {
-        private readonly byte _endpointId;
+        public byte EndPoint { get; }
 
         protected EndpointSupportedCommandClassBase(Node node, CommandClass commandClass) :
             this(node, commandClass, 0)
@@ -24,12 +25,12 @@ namespace ZWave.CommandClasses
         protected EndpointSupportedCommandClassBase(Node node, CommandClass commandClass, byte endpointId)
             : base(node, commandClass)
         {
-            _endpointId = endpointId;
+            EndPoint = endpointId;
         }
 
         protected async Task<byte[]> Send(Command command, Enum responseCommand, CancellationToken cancellationToken)
         {
-            if (_endpointId == 0)
+            if (EndPoint == 0)
             {
                 // Send in regular manner.
                 //
@@ -45,7 +46,7 @@ namespace ZWave.CommandClasses
 
         protected async Task Send(Command command, CancellationToken cancellationToken)
         {
-            if (_endpointId == 0)
+            if (EndPoint == 0)
             {
                 // Send in regular manner.
                 //
@@ -71,7 +72,7 @@ namespace ZWave.CommandClasses
             const int encapsolationEdditionalParams = 4;
             byte[] payload = new byte[command.Payload.Length + encapsolationEdditionalParams];
             payload[0] = controllerId;
-            payload[1] = _endpointId;
+            payload[1] = EndPoint;
             payload[2] = command.ClassID;
             payload[3] = command.CommandID;
             for (int i = 0; i < command.Payload.Length; i++)
@@ -91,8 +92,8 @@ namespace ZWave.CommandClasses
 
             // Check sub report
             //
-            if (response[0] != _endpointId)
-                throw new ReponseFormatException($"Got response for endpoint id {response[0]}, while this command class serves endpoint {_endpointId}.");
+            if (response[0] != EndPoint)
+                throw new ReponseFormatException($"Got response for endpoint id {response[0]}, while this command class serves endpoint {EndPoint}.");
 
             if (response[2] != Convert.ToByte(Class) || response[3] != Convert.ToByte(expectedResponseCommand))
             {
@@ -104,7 +105,7 @@ namespace ZWave.CommandClasses
 
         private Func<byte[], bool> EncapsulatCommandEndpointValidator(Enum responseCommand)
         {
-            return payload => payload.Length >= 4 && payload[0] == _endpointId && payload[3] == Convert.ToByte(responseCommand);
+            return payload => payload.Length >= 4 && payload[0] == EndPoint && payload[3] == Convert.ToByte(responseCommand);
         }
     }
 }
