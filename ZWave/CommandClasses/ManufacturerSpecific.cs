@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class ManufacturerSpecific : CommandClassBase
+    public class ManufacturerSpecific : CommandClassBase_OLD
     {
-        enum command
-        {
-            Get = 0x04,
-            Report = 0x05
-        }
-
-        public ManufacturerSpecific(Node node) : base(node, CommandClass.ManufacturerSpecific)
+        public ManufacturerSpecific(IZwaveNode node) : base(node, CommandClass.ManufacturerSpecific)
         {
         }
 
@@ -28,6 +19,12 @@ namespace ZWave.CommandClasses
         {
             var response = await Channel.Send(Node, new Command(Class, command.Get), command.Report, cancellationToken);
             return new ManufacturerSpecificReport(Node, response);
+        }
+
+        private enum command
+        {
+            Get = 0x04,
+            Report = 0x05
         }
     }
 }

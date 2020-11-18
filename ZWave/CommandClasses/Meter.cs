@@ -1,30 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class Meter : CommandClassBase
+    public class Meter : CommandClassBase_OLD
     {
+        public Meter(IZwaveNode node) : base(node, CommandClass.Meter)
+        {
+        }
+
         public event EventHandler<ReportEventArgs<MeterReport>> Changed;
-
-        enum command
-        {
-            Get = 0x01,
-            Report = 0x02,
-            
-            // Version 2
-            SupportedGet = 0x03,
-            SupportedReport = 0x04,
-            Reset = 0x05
-        }
-
-        public Meter(Node node) : base(node, CommandClass.Meter)
-        {
-        }
 
         public Task<MeterReport> Get()
         {
@@ -44,7 +31,7 @@ namespace ZWave.CommandClasses
 
         public Task<MeterReport> Get(ElectricMeterScale scale, CancellationToken cancellationToken)
         {
-            return Get((Enum)scale, cancellationToken);
+            return Get((Enum) scale, cancellationToken);
         }
 
         public Task<MeterReport> Get(GasMeterScale scale)
@@ -54,7 +41,7 @@ namespace ZWave.CommandClasses
 
         public Task<MeterReport> Get(GasMeterScale scale, CancellationToken cancellationToken)
         {
-            return Get((Enum)scale, cancellationToken);
+            return Get((Enum) scale, cancellationToken);
         }
 
         public Task<MeterReport> Get(WaterMeterScale scale)
@@ -64,12 +51,12 @@ namespace ZWave.CommandClasses
 
         public Task<MeterReport> Get(WaterMeterScale scale, CancellationToken cancellationToken)
         {
-            return Get((Enum)scale, cancellationToken);
+            return Get((Enum) scale, cancellationToken);
         }
 
         private async Task<MeterReport> Get(Enum scale, CancellationToken cancellationToken)
         {
-            var response = await Channel.Send(Node, new Command(Class, command.Get, (byte)(Convert.ToByte(scale) << 3)), command.Report, cancellationToken);
+            var response = await Channel.Send(Node, new Command(Class, command.Get, (byte) (Convert.ToByte(scale) << 3)), command.Report, cancellationToken);
             return new MeterReport(Node, response);
         }
 
@@ -98,11 +85,18 @@ namespace ZWave.CommandClasses
         protected virtual void OnChanged(ReportEventArgs<MeterReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
         }
 
+        private enum command
+        {
+            Get = 0x01,
+            Report = 0x02,
+
+            // Version 2
+            SupportedGet = 0x03,
+            SupportedReport = 0x04,
+            Reset = 0x05
+        }
     }
 }

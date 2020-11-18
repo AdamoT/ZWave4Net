@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave.Channel.Protocol
+﻿namespace ZWave.Channel.Protocol
 {
     public enum NodeUpdateState
     {
@@ -12,6 +8,6 @@ namespace ZWave.Channel.Protocol
         RoutingPending = 0x80,
         NewIdAssigned = 0x40,
         DeletedDone = 0x20,
-        SucId = 0x10,
+        SucId = 0x10
     }
 }

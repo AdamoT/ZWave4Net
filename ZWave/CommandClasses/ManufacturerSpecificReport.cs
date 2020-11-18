@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ZWave.Channel;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
@@ -9,17 +6,17 @@ namespace ZWave.CommandClasses
     public class ManufacturerSpecificReport : NodeReport
     {
         public readonly ushort ManufacturerID;
-        public readonly ushort ProductType;
         public readonly ushort ProductID;
+        public readonly ushort ProductType;
 
-        internal ManufacturerSpecificReport(Node node, byte[] payload) : base(node)
+        internal ManufacturerSpecificReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
             if (payload.Length < 6)
                 throw new ReponseFormatException($"The response was not in the expected format. {GetType().Name}: Payload: {BitConverter.ToString(payload)}");
 
-            ManufacturerID = PayloadConverter.ToUInt16(payload, 0);
+            ManufacturerID = PayloadConverter.ToUInt16(payload);
             ProductType = PayloadConverter.ToUInt16(payload, 2);
             ProductID = PayloadConverter.ToUInt16(payload, 4);
         }

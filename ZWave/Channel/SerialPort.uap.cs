@@ -1,9 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
-#if WINDOWS_UWP
+﻿#if WINDOWS_UWP
 using Windows.Devices.SerialCommunication;
 using Windows.Storage.Streams;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -11,7 +6,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace ZWave.Channel
 {
-#if WINDOWS_UWP
+    #if WINDOWS_UWP
     public class SerialPort : ISerialPort
     {
         private readonly string _id;
@@ -214,5 +209,5 @@ namespace ZWave.Channel
             }
         }
     }
-#endif
+    #endif
 }

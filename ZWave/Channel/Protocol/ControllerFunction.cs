@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ZWave.Channel.Protocol
 {
-    class ControllerFunction : Message
+    internal class ControllerFunction : Message
     {
         public readonly byte[] Payload;
 
@@ -18,20 +15,14 @@ namespace ZWave.Channel.Protocol
 
         public override string ToString()
         {
-            if (Payload != null)
-            {
-                return string.Concat(base.ToString(), " ", $"Payload:{BitConverter.ToString(Payload)}");
-            }
+            if (Payload != null) return string.Concat(base.ToString(), " ", $"Payload:{BitConverter.ToString(Payload)}");
             return base.ToString();
         }
 
         protected override List<byte> GetPayload()
         {
             var payload = base.GetPayload();
-            if (Payload != null)
-            {
-                payload.AddRange(Payload);
-            }
+            if (Payload != null) payload.AddRange(Payload);
             return payload;
         }
     }

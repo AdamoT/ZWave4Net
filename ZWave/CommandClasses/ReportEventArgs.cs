@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave.CommandClasses
+﻿namespace ZWave.CommandClasses
 {
     public class ReportEventArgs<T> where T : NodeReport
     {

@@ -1,19 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using ZWave.Channel;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
 {
     public class SensorAlarmReport : NodeReport
     {
+        public readonly byte Level;
         public readonly byte Source;
         public readonly AlarmType Type;
-        public readonly byte Level;
 
-        internal SensorAlarmReport(Node node, byte[] payload) : base(node)
+        internal SensorAlarmReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
@@ -22,7 +18,7 @@ namespace ZWave.CommandClasses
 
             // 5 bytes: byte 3 and 4 unknown
             Source = payload[0];
-            Type = (AlarmType)payload[1];
+            Type = (AlarmType) payload[1];
             Level = payload[2];
         }
 

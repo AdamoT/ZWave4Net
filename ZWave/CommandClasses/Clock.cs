@@ -1,22 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class Clock : CommandClassBase
+    public class Clock : CommandClassBase_OLD
     {
-        enum command : byte
-        {
-            Set = 0x04,
-            Get = 0x05,
-            Report = 006,
-        }
-
-        public Clock(Node node) : base(node, CommandClass.Clock)
+        public Clock(IZwaveNode node) : base(node, CommandClass.Clock)
         {
         }
 
@@ -64,12 +55,19 @@ namespace ZWave.CommandClasses
                     break;
             }
 
-            var payload = new byte[] { 0x00, 0x00 };
-            payload[0] |= (byte)(day << 5);
-            payload[0] |= (byte)(hour & 0x1F);
+            var payload = new byte[] {0x00, 0x00};
+            payload[0] |= (byte) (day << 5);
+            payload[0] |= (byte) (hour & 0x1F);
             payload[1] = minute;
 
             await Channel.Send(Node, new Command(Class, command.Set, payload), cancellationToken);
+        }
+
+        private enum command : byte
+        {
+            Set = 0x04,
+            Get = 0x05,
+            Report = 006
         }
     }
 }

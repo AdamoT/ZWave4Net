@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave.CommandClasses
+﻿namespace ZWave.CommandClasses.Application
 {
     public enum ThermostatSetpointType : byte
     {
@@ -17,9 +13,10 @@ namespace ZWave.CommandClasses
         DryAir = 0x08,
         MoistAir = 0x09,
         AutoChangeover = 0x0A,
-        HeatingEcon = 0x0B,
-        CoolingEcon = 0x0C,
+        EnergySaveHeating = 0x0B,
+        EnergySaveCooling = 0x0C,
         AwayHeating = 0x0D,
-        Count = 0x0E
-    };
+        AwayCooling = 0x0E,
+        FullPower = 0x0F
+    }
 }

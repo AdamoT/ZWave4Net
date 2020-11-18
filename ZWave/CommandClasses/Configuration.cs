@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,16 +6,9 @@ using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class Configuration : CommandClassBase
+    public class Configuration : CommandClassBase_OLD
     {
-        enum command : byte
-        {
-            Set = 0x04,
-            Get = 0x05,
-            Report = 0x06
-        }
-
-        public Configuration(Node node) : base(node, CommandClass.Configuration)
+        public Configuration(IZwaveNode node) : base(node, CommandClass.Configuration)
         {
         }
 
@@ -120,7 +111,7 @@ namespace ZWave.CommandClasses
 
         public async Task Set(byte parameter, ulong value, CancellationToken cancellationToken)
         {
-            await Set(parameter, (long)value, false, 0, cancellationToken);
+            await Set(parameter, (long) value, false, 0, cancellationToken);
         }
 
         private async Task Set(byte parameter, long value, bool signed, byte size, CancellationToken cancellationToken)
@@ -133,24 +124,32 @@ namespace ZWave.CommandClasses
             }
 
             var values = default(byte[]);
-            switch(size)
+            switch (size)
             {
                 case 1:
-                    values = signed ? PayloadConverter.GetBytes((sbyte)value) : PayloadConverter.GetBytes((byte)value);
+                    values = signed ? PayloadConverter.GetBytes((sbyte) value) : PayloadConverter.GetBytes((byte) value);
                     break;
                 case 2:
-                    values = signed ? PayloadConverter.GetBytes((short)value) : PayloadConverter.GetBytes((ushort)value);
+                    values = signed ? PayloadConverter.GetBytes((short) value) : PayloadConverter.GetBytes((ushort) value);
                     break;
                 case 4:
-                    values = signed ? PayloadConverter.GetBytes((int)value) : PayloadConverter.GetBytes((uint)value);
+                    values = signed ? PayloadConverter.GetBytes((int) value) : PayloadConverter.GetBytes((uint) value);
                     break;
                 case 8:
-                    values = signed ? PayloadConverter.GetBytes((long)value) : PayloadConverter.GetBytes((ulong)value);
+                    values = signed ? PayloadConverter.GetBytes(value) : PayloadConverter.GetBytes((ulong) value);
                     break;
                 default:
                     throw new NotSupportedException($"Size:{size} is not supported");
             }
-            await Channel.Send(Node, new Command(Class, command.Set, new[] { parameter, (byte)values.Length }.Concat(values).ToArray()), cancellationToken);
+
+            await Channel.Send(Node, new Command(Class, command.Set, new[] {parameter, (byte) values.Length}.Concat(values).ToArray()), cancellationToken);
+        }
+
+        private enum command : byte
+        {
+            Set = 0x04,
+            Get = 0x05,
+            Report = 0x06
         }
     }
 }

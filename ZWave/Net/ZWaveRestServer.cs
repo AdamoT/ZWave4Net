@@ -1,5 +1,4 @@
 ﻿#if NET
-
 using System;
 using System.IO;
 using System.ServiceModel.Web;

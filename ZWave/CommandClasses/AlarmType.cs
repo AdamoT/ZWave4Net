@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave.CommandClasses
+﻿namespace ZWave.CommandClasses
 {
     public enum AlarmType : byte
     {
@@ -17,6 +13,6 @@ namespace ZWave.CommandClasses
         PowerManagement = 0x08,
         System = 0x09,
         Emergency = 0x0A,
-        Count = 0x0B,
-    };
+        Count = 0x0B
+    }
 }

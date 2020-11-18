@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.IO.Ports;
 
 namespace ZWave.Channel
 {
@@ -6,20 +7,14 @@ namespace ZWave.Channel
     {
         private readonly System.IO.Ports.SerialPort _port;
 
-        public Stream InputStream
-        {
-            get { return _port.BaseStream; }
-        }
-
-        public Stream OutputStream
-        {
-            get { return _port.BaseStream; }
-        }
-
         public SerialPort(string name)
         {
-            _port = new System.IO.Ports.SerialPort(name, 115200, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
+            _port = new System.IO.Ports.SerialPort(name, 115200, Parity.None, 8, StopBits.One);
         }
+
+        public Stream InputStream => _port.BaseStream;
+
+        public Stream OutputStream => _port.BaseStream;
 
         public void Open()
         {

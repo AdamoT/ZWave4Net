@@ -9,18 +9,18 @@ namespace ZWave.CommandClasses
         public readonly CommandClass Class;
         public readonly byte Version;
 
-        internal VersionCommandClassReport(Node node, byte[] payload) : base(node)
+        internal VersionCommandClassReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
             if (payload.Length < 2)
                 throw new ReponseFormatException($"The response was not in the expected format. {GetType().Name}: Payload: {BitConverter.ToString(payload)}");
 
-            Class = (CommandClass)Enum.ToObject(typeof(CommandClass), payload[0]);
+            Class = (CommandClass) Enum.ToObject(typeof(CommandClass), payload[0]);
             Version = payload[1];
         }
 
-        internal static Func<byte[], bool> GetResponseValidatorForCommandClass(Node node, CommandClass @class)
+        internal static Func<byte[], bool> GetResponseValidatorForCommandClass(IZwaveNode node, CommandClass @class)
         {
             return payload =>
             {

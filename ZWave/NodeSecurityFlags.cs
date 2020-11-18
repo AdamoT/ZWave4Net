@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ZWave
 {
-    [Flags()]
-    public enum Security : byte
+    [Flags]
+    public enum NodeSecurityFlags
     {
         Nonde = 0x00,
         Security = 0x01,

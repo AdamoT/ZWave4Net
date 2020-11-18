@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ZWave.Channel;
+﻿using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
     public interface ICommandClass
     {
-        Node Node { get; }
+        IZwaveNode Node { get; }
         CommandClass Class { get; }
+        byte Version { get; }
+        byte EndPoint { get; }
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave
+﻿namespace ZWave
 {
     public enum GenericType : byte
     {

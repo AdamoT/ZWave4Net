@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ZWave.Channel.Protocol
 {
-    class NodeCommand : Message
+    internal class NodeCommand : Message
     {
         private static byte callbackID = 0;
-        public readonly byte NodeID;
-        public readonly Command Command;
         public readonly byte CallbackID;
+        public readonly Command Command;
+        public readonly byte NodeID;
 
         public NodeCommand(byte nodeID, Command command)
             : base(FrameHeader.SOF, MessageType.Request, Channel.Function.SendData)
@@ -31,7 +28,10 @@ namespace ZWave.Channel.Protocol
 
         private static byte GetNextCallbackID()
         {
-            lock (typeof(Message)) { return callbackID = (byte)((callbackID % 255) + 1); }
+            lock (typeof(Message))
+            {
+                return callbackID = (byte) (callbackID % 255 + 1);
+            }
         }
 
         protected override List<byte> GetPayload()
@@ -39,7 +39,7 @@ namespace ZWave.Channel.Protocol
             var payload = base.GetPayload();
             payload.Add(NodeID);
             payload.AddRange(Command.ToBytes());
-            payload.Add((byte)(TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
+            payload.Add((byte) (TransmitOptions.Ack | TransmitOptions.AutoRoute | TransmitOptions.Explore));
             payload.Add(CallbackID);
             return payload;
         }

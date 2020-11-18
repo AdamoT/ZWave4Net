@@ -1,28 +1,73 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using ZWave.Channel;
+using ZWave.CommandClasses.TransportEncapsulation;
 
 namespace ZWave.CommandClasses
 {
-    public class CommandClassBase : ICommandClass
+    public abstract class CommandClassBase : ICommandClassInternal
     {
-        public Node Node { get; private set; }
-        public CommandClass Class { get; private set; }
+        #region Properties
 
-        public CommandClassBase(Node node, CommandClass @class)
+        protected ZWaveChannel Channel { get; private set; }
+
+        #endregion Properties
+
+        #region ICommandClassInternal
+
+        public void Initialize(IZwaveNode node, byte endPoint = 0)
         {
-            Node = node;
-            Class = @class;
+            Node = node ?? throw new ArgumentNullException(nameof(node));
+            Channel = Node.Controller.Channel ?? throw new InvalidOperationException("Missing channel");
+
+            EndPoint = endPoint;
         }
 
-        protected ZWaveChannel Channel
+        #endregion ICommandClassInternal
+
+        #region ICommandClass
+
+        public IZwaveNode Node { get; private set; }
+        public abstract CommandClass Class { get; }
+        public virtual byte Version => 1;
+        public byte EndPoint { get; private set; }
+
+        public virtual void HandleEvent(Command command)
         {
-            get { return Node.Controller.Channel; }
         }
 
-        internal protected virtual void HandleEvent(Command command)
+        #endregion ICommandClass
+
+        #region Protected Methods
+
+        protected async Task<byte[]> Send(Command command, Enum responseCommand, CancellationToken cancellationToken)
         {
+            if (EndPoint == 0)
+            {
+                return await Channel.Send(Node, command, responseCommand, cancellationToken);
+            }
+
+            var response = await MultiChannel.SendEncapsulatedMessage(Node, Class, EndPoint, command, responseCommand, cancellationToken)
+                .ConfigureAwait(false);
+
+            return MultiChannel.ExtractEndpointResponse(Class, EndPoint, response, responseCommand);
         }
+
+        protected async Task Send(Command command, CancellationToken cancellationToken)
+        {
+            if (EndPoint == 0)
+            {
+                await Channel.Send(Node, command, cancellationToken);
+            }
+            else
+            {
+                var controllerId = await Node.Controller.GetNodeID(cancellationToken);
+                var encapsolatedCommand = MultiChannel.EncapsulateCommandForEndpoint(controllerId, EndPoint, command);
+                await Channel.Send(Node, encapsolatedCommand, cancellationToken);
+            }
+        }
+
+        #endregion Protected Methods
     }
 }

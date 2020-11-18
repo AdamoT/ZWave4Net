@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
@@ -9,16 +7,16 @@ namespace ZWave.CommandClasses
     {
         KeyPressed = 0x00,
         KeyReleased = 0x01,
-        KeyHeldDown = 0x02,
+        KeyHeldDown = 0x02
     }
 
     public class CentralSceneReport : NodeReport
     {
-        public readonly byte SequenceNumber;
         public readonly CentralSceneKeyState KeyState;
         public readonly byte SceneNumber;
+        public readonly byte SequenceNumber;
 
-        internal CentralSceneReport(Node node, byte[] payload) : base(node)
+        internal CentralSceneReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
@@ -26,7 +24,7 @@ namespace ZWave.CommandClasses
                 throw new ReponseFormatException($"The response was not in the expected format. {GetType().Name}: Payload: {BitConverter.ToString(payload)}");
 
             SequenceNumber = payload[0];
-            KeyState = (CentralSceneKeyState)(payload[1] & 0x07);
+            KeyState = (CentralSceneKeyState) (payload[1] & 0x07);
             SceneNumber = payload[2];
         }
 

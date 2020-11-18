@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
@@ -9,24 +7,17 @@ namespace ZWave.CommandClasses
 {
     public class SwitchMultiLevel : EndpointSupportedCommandClassBase
     {
-        enum command : byte
+        public SwitchMultiLevel(IZwaveNode node)
+            : base(node, CommandClass.SwitchMultiLevel)
         {
-            Set = 0x01,
-            Get = 0x02,
-            Report = 0x03,
-            StartLevelChange = 0x04,
-            StopLevelChange = 0x05,
+        }
+
+        internal SwitchMultiLevel(IZwaveNode node, byte endpointId)
+            : base(node, CommandClass.SwitchMultiLevel, endpointId)
+        {
         }
 
         public event EventHandler<ReportEventArgs<SwitchMultiLevelReport>> Changed;
-
-        public SwitchMultiLevel(Node node)
-            : base(node, CommandClass.SwitchMultiLevel)
-        { }
-
-        internal SwitchMultiLevel(Node node, byte endpointId)
-            : base(node, CommandClass.SwitchMultiLevel, endpointId)
-        { }
 
         public Task<SwitchMultiLevelReport> Get()
         {
@@ -59,9 +50,9 @@ namespace ZWave.CommandClasses
         {
             var payload = new byte[]
             {
-                increase ? (byte)0x20 : (byte)0x60,
+                increase ? (byte) 0x20 : (byte) 0x60,
                 0, // Start level - ignored (for now!)
-                duration,
+                duration
             };
             await Channel.Send(Node, new Command(Class, command.StartLevelChange, payload), cancellationToken);
         }
@@ -87,10 +78,16 @@ namespace ZWave.CommandClasses
         protected virtual void OnChanged(ReportEventArgs<SwitchMultiLevelReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
+        }
+
+        private enum command : byte
+        {
+            Set = 0x01,
+            Get = 0x02,
+            Report = 0x03,
+            StartLevelChange = 0x04,
+            StopLevelChange = 0x05
         }
     }
 }

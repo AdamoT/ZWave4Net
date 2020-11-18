@@ -7,7 +7,36 @@ namespace ZWave.CommandClasses
 {
     public class Version : CommandClassBase
     {
-        enum command : byte
+        #region ICommandClass
+
+        public override CommandClass Class => CommandClass.Version;
+
+        #endregion ICommandClass
+
+        public async Task<VersionReport> Get(CancellationToken cancellationToken = default)
+        {
+            var response = await Channel.Send(Node, new Command(Class, CommandsV1.Get), CommandsV1.Report, cancellationToken)
+                .ConfigureAwait(false);
+
+            return new VersionReport(Node, response);
+        }
+
+        public async Task<VersionCommandClassReport> GetCommandClass(CommandClass @class, CancellationToken cancellationToken = default)
+        {
+            var response = await Channel.Send(
+                    Node,
+                    new Command(Class, CommandsV1.CommandClassGet, Convert.ToByte(@class)),
+                    CommandsV1.CommandClassReport,
+                    VersionCommandClassReport.GetResponseValidatorForCommandClass(Node, @class),
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            return new VersionCommandClassReport(Node, response);
+        }
+
+        #region Types
+
+        protected enum CommandsV1 : byte
         {
             Get = 0x11,
             Report = 0x12,
@@ -15,36 +44,6 @@ namespace ZWave.CommandClasses
             CommandClassReport = 0x14
         }
 
-
-        public Version(Node node) : base(node, CommandClass.Version)
-        {
-        }
-
-        public Task<VersionReport> Get()
-        {
-            return Get(CancellationToken.None);
-        }
-
-        public async Task<VersionReport> Get(CancellationToken cancellationToken)
-        {
-            var response = await Channel.Send(Node, new Command(Class, command.Get), command.Report, cancellationToken);
-            return new VersionReport(Node, response);
-        }
-
-        public Task<VersionCommandClassReport> GetCommandClass(CommandClass @class)
-        {
-            return GetCommandClass(@class, CancellationToken.None);
-        }
-
-        public async Task<VersionCommandClassReport> GetCommandClass(CommandClass @class, CancellationToken cancellationToken)
-        {
-            var response = await Channel.Send(
-                Node,
-                new Command(Class, command.CommandClassGet, Convert.ToByte(@class)),
-                command.CommandClassReport,
-                VersionCommandClassReport.GetResponseValidatorForCommandClass(Node, @class),
-                cancellationToken);
-            return new VersionCommandClassReport(Node, response);
-        }
+        #endregion Types
     }
 }

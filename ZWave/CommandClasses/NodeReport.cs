@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ZWave.CommandClasses
 {
-    public class NodeReport 
+    public class NodeReport
     {
-        public readonly Node Node;
+        public readonly IZwaveNode Node;
 
-        public NodeReport(Node node)
+        public NodeReport(IZwaveNode node)
         {
             if ((Node = node) == null)
                 throw new ArgumentNullException(nameof(node));

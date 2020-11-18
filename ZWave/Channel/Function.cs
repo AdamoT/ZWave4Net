@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ZWave.Channel
+﻿namespace ZWave.Channel
 {
     public enum Function : byte
     {
@@ -84,6 +78,6 @@ namespace ZWave.Channel
         IsVirtualNode = 0xa6,
         SetPromiscuousMode = 0xd0,
         SetConfiguration = 0xF2,
-        GetConfiguration = 0xF3,
+        GetConfiguration = 0xF3
     }
 }

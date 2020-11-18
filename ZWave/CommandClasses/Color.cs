@@ -1,23 +1,14 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
-using System.Threading;
 
 namespace ZWave.CommandClasses
 {
-    public class Color : CommandClassBase
+    public class Color : CommandClassBase_OLD
     {
-        enum command
-        {
-            Get = 0x03,
-            Report = 0x04,
-            Set = 0x05,
-        }
-
-        public Color(Node node) : base(node, CommandClass.Color)
+        public Color(IZwaveNode node) : base(node, CommandClass.Color)
         {
         }
 
@@ -29,7 +20,7 @@ namespace ZWave.CommandClasses
         public async Task Set(ColorComponent[] components, CancellationToken cancellationToken)
         {
             var payload = new List<byte>();
-            payload.Add((byte)components.Length);
+            payload.Add((byte) components.Length);
             payload.AddRange(components.SelectMany(element => element.ToBytes()));
             await Channel.Send(Node, new Command(Class, command.Set, payload.ToArray()), cancellationToken);
         }
@@ -43,6 +34,13 @@ namespace ZWave.CommandClasses
         {
             var response = await Channel.Send(Node, new Command(Class, command.Get, componentID), command.Report, cancellationToken);
             return new ColorReport(Node, response);
+        }
+
+        private enum command
+        {
+            Get = 0x03,
+            Report = 0x04,
+            Set = 0x05
         }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
@@ -9,7 +7,7 @@ namespace ZWave.CommandClasses
     {
         public readonly byte Value;
 
-        internal BasicReport(Node node, byte[] payload) : base(node)
+        internal BasicReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));

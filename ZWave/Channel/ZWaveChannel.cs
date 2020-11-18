@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel.Protocol;
@@ -24,7 +21,7 @@ namespace ZWave.Channel
         public readonly ISerialPort Port;
         public TextWriter Log { get; set; }
         public TimeSpan ReceiveTimeout = TimeSpan.FromSeconds(2);
-        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(5);
+        public TimeSpan ResponseTimeout = TimeSpan.FromSeconds(15);
         public event EventHandler<NodeEventArgs> NodeEventReceived;
         public event EventHandler<NodeUpdateEventArgs> NodeUpdateReceived;
         public event EventHandler<ErrorEventArgs> Error;
@@ -40,19 +37,19 @@ namespace ZWave.Channel
             _semaphore = new SemaphoreSlim(1, 1);
         }
 
-#if NET || WINDOWS_UWP || NETCOREAPP2_0 || NETSTANDARD2_0
+        #if NET || WINDOWS_UWP || NETCOREAPP2_0 || NETSTANDARD2_0
         public ZWaveChannel(string portName)
              : this(new SerialPort(portName))
         {
         }
-#endif
+        #endif
 
-#if WINDOWS_UWP
+        #if WINDOWS_UWP
         public ZWaveChannel(ushort vendorId, ushort productId)
              : this(new SerialPort(vendorId, productId))
         {
         }
-#endif
+        #endif
 
         protected virtual void OnError(ErrorEventArgs e)
         {
@@ -62,28 +59,23 @@ namespace ZWave.Channel
 
         protected virtual void OnClosed(EventArgs e)
         {
-            LogMessage($"Connection closed");
+            LogMessage("Connection closed");
             Closed?.Invoke(this, e);
         }
 
         private void LogMessage(string message)
         {
-            if (Log != null && message != null)
-            {
-                Log.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd H:mm:ss.fff")} {message}");
-            }
+            if (Log != null && message != null) Log.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd H:mm:ss.fff")} {message}");
         }
 
         private void HandleException(Exception ex)
         {
             if (ex is AggregateException)
             {
-                foreach (var inner in ((AggregateException)ex).InnerExceptions)
-                {
-                    LogMessage(inner.ToString());
-                }
+                foreach (var inner in ((AggregateException) ex).InnerExceptions) LogMessage(inner.ToString());
                 return;
             }
+
             LogMessage(ex.ToString());
         }
 
@@ -93,7 +85,6 @@ namespace ZWave.Channel
                 throw new ArgumentNullException(nameof(port));
 
             while (true)
-            {
                 try
                 {
                     // wait for message received (blocking)
@@ -139,7 +130,7 @@ namespace ZWave.Channel
                 catch (UnknownFrameException ex)
                 {
                     // probably out of sync on the serial port
-                    // ToDo: handle gracefully 
+                    // ToDo: handle gracefully
                     OnError(new ErrorEventArgs(ex));
                 }
                 catch (IOException)
@@ -153,7 +144,6 @@ namespace ZWave.Channel
                     // just raise error event. don't break reading of serial port
                     OnError(new ErrorEventArgs(ex));
                 }
-            }
         }
 
         private void ProcessQueue<T>(BlockingCollection<T> queue, Action<T> process) where T : Message
@@ -174,10 +164,7 @@ namespace ZWave.Channel
                 {
                 }
 
-                if (message != null)
-                {
-                    process((T)message);
-                }
+                if (message != null) process((T) message);
             }
         }
 
@@ -188,14 +175,11 @@ namespace ZWave.Channel
 
             if (message is NodeEvent)
             {
-                OnNodeEventReceived((NodeEvent)message);
+                OnNodeEventReceived((NodeEvent) message);
                 return;
             }
-            if (message is NodeUpdate)
-            {
-                OnNodeUpdateReceived((NodeUpdate)message);
-                return;
-            }
+
+            if (message is NodeUpdate) OnNodeUpdateReceived((NodeUpdate) message);
         }
 
         private void OnNodeEventReceived(NodeEvent @event)
@@ -205,9 +189,7 @@ namespace ZWave.Channel
 
             var handler = NodeEventReceived;
             if (handler != null)
-            {
                 foreach (var invocation in handler.GetInvocationList().Cast<EventHandler<NodeEventArgs>>())
-                {
                     try
                     {
                         invocation(this, new NodeEventArgs(@event.NodeID, @event.Command));
@@ -216,8 +198,6 @@ namespace ZWave.Channel
                     {
                         LogMessage(ex.ToString());
                     }
-                }
-            }
         }
 
         private void OnNodeUpdateReceived(NodeUpdate update)
@@ -227,9 +207,7 @@ namespace ZWave.Channel
 
             var handler = NodeUpdateReceived;
             if (handler != null)
-            {
                 foreach (var invocation in handler.GetInvocationList().Cast<EventHandler<NodeUpdateEventArgs>>())
-                {
                     try
                     {
                         invocation(this, new NodeUpdateEventArgs(update.NodeID));
@@ -238,8 +216,6 @@ namespace ZWave.Channel
                     {
                         LogMessage(ex.ToString());
                     }
-                }
-            }
         }
 
         private void OnTransmit(Message message)
@@ -258,12 +234,12 @@ namespace ZWave.Channel
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var result = await Task.Run((Func<Message>)(() =>
+                var result = await Task.Run(() =>
                 {
                     var message = default(Message);
-                    _responseQueue.TryTake(out message, (int)ResponseTimeout.TotalMilliseconds, cancellationToken);
+                    _responseQueue.TryTake(out message, (int) ResponseTimeout.TotalMilliseconds, cancellationToken);
                     return message;
-                })).ConfigureAwait(false);
+                }).ConfigureAwait(false);
 
                 if (result == null)
                     throw new TimeoutException();
@@ -271,13 +247,10 @@ namespace ZWave.Channel
                     throw new NakResponseException();
                 if (result == Message.CAN)
                     throw new CanResponseException();
-                if (result is NodeCommandCompleted && ((NodeCommandCompleted)result).TransmissionState != TransmissionState.CompleteOk)
-                    throw new TransmissionException($"Transmission failure: {((NodeCommandCompleted)result).TransmissionState}.");
+                if (result is NodeCommandCompleted && ((NodeCommandCompleted) result).TransmissionState != TransmissionState.CompleteOk)
+                    throw new TransmissionException($"Transmission failure: {((NodeCommandCompleted) result).TransmissionState}.");
 
-                if (predicate(result))
-                {
-                    return result;
-                }
+                if (predicate(result)) return result;
             }
 
             throw new TaskCanceledException();
@@ -295,7 +268,7 @@ namespace ZWave.Channel
             _processEventsTask = new Task(() => ProcessQueue(_eventQueue, OnNodeMessageReceived));
             _transmitTask = new Task(() => ProcessQueue(_transmitQueue, OnTransmit));
             _portReadTask = new Task(() => ReadPort(Port));
-            
+
             // start tasks
             _portReadTask.Start();
             _processEventsTask.Start();
@@ -315,7 +288,7 @@ namespace ZWave.Channel
             _transmitTask.Wait();
         }
 
-        private async Task<Byte[]> Exchange(Func<Task<Byte[]>> func, string message, CancellationToken cancellationToken)
+        private async Task<byte[]> Exchange(Func<Task<byte[]>> func, string message, CancellationToken cancellationToken)
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
@@ -325,7 +298,6 @@ namespace ZWave.Channel
             {
                 var attempt = 0;
                 while (!cancellationToken.IsCancellationRequested)
-                {
                     try
                     {
                         return await func().ConfigureAwait(false);
@@ -357,7 +329,6 @@ namespace ZWave.Channel
 
                         await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                     }
-                }
             }
             finally
             {
@@ -379,9 +350,9 @@ namespace ZWave.Channel
                 var request = new ControllerFunction(function, payload);
                 _transmitQueue.Add(request);
 
-                var response = await WaitForResponse((message) => predicate((ControllerFunctionMessage)message), cancellationToken).ConfigureAwait(false);
+                var response = await WaitForResponse(message => predicate((ControllerFunctionMessage) message), cancellationToken).ConfigureAwait(false);
 
-                return ((ControllerFunctionMessage)response).Payload;
+                return ((ControllerFunctionMessage) response).Payload;
             }, $"{function} {(payload != null ? BitConverter.ToString(payload) : string.Empty)}", cancellationToken);
         }
 
@@ -392,10 +363,7 @@ namespace ZWave.Channel
 
         public Task<byte[]> Send(Function function, CancellationToken cancellationToken, params byte[] payload)
         {
-            return Send(function, payload, (message) =>
-            {
-                return (message is ControllerFunctionCompleted && ((ControllerFunctionCompleted)message).Function == function);
-            }, cancellationToken);
+            return Send(function, payload, message => { return message is ControllerFunctionCompleted && ((ControllerFunctionCompleted) message).Function == function; }, cancellationToken);
         }
 
         public Task<byte[]> Send(Function function, byte[] payload, Func<byte[], bool> predicate)
@@ -405,10 +373,7 @@ namespace ZWave.Channel
 
         public Task<byte[]> Send(Function function, byte[] payload, Func<byte[], bool> predicate, CancellationToken cancellationToken)
         {
-            return Send(function, payload, (message) =>
-            {
-                return (message is ControllerFunctionEvent) && predicate(((ControllerFunctionEvent)message).Payload);
-            }, cancellationToken);
+            return Send(function, payload, message => { return message is ControllerFunctionEvent && predicate(((ControllerFunctionEvent) message).Payload); }, cancellationToken);
         }
 
         public Task Send(byte nodeID, Command command)
@@ -428,31 +393,28 @@ namespace ZWave.Channel
                 var request = new NodeCommand(nodeID, command);
                 _transmitQueue.Add(request);
 
-                await WaitForResponse((message) =>
-                {
-                    return (message is NodeCommandCompleted && ((NodeCommandCompleted)message).CallbackID == request.CallbackID);
-                }, cancellationToken).ConfigureAwait(false);
+                await WaitForResponse(message => { return message is NodeCommandCompleted && ((NodeCommandCompleted) message).CallbackID == request.CallbackID; }, cancellationToken).ConfigureAwait(false);
 
                 return null;
             }, $"NodeID:{nodeID:D3}, Command:{command}", cancellationToken);
         }
 
-        public Task<Byte[]> Send(byte nodeID, Command command, byte responseCommandID)
+        public Task<byte[]> Send(byte nodeID, Command command, byte responseCommandID)
         {
             return Send(nodeID, command, responseCommandID, CancellationToken.None);
         }
 
-        public Task<Byte[]> Send(byte nodeID, Command command, byte responseCommandID, CancellationToken cancellationToken)
+        public Task<byte[]> Send(byte nodeID, Command command, byte responseCommandID, CancellationToken cancellationToken)
         {
             return Send(nodeID, command, responseCommandID, null, cancellationToken);
         }
 
-        public Task<Byte[]> Send(byte nodeID, Command command, byte responseCommandID, Func<byte[], bool> payloadValidation)
+        public Task<byte[]> Send(byte nodeID, Command command, byte responseCommandID, Func<byte[], bool> payloadValidation)
         {
             return Send(nodeID, command, responseCommandID, payloadValidation, CancellationToken.None);
         }
 
-        public Task<Byte[]> Send(byte nodeID, Command command, byte responseCommandID, Func<byte[], bool> payloadValidation, CancellationToken cancellationToken)
+        public Task<byte[]> Send(byte nodeID, Command command, byte responseCommandID, Func<byte[], bool> payloadValidation, CancellationToken cancellationToken)
         {
             if (nodeID == 0)
                 throw new ArgumentOutOfRangeException(nameof(nodeID), nodeID, "nodeID can not be 0");
@@ -466,14 +428,10 @@ namespace ZWave.Channel
                 EventHandler<NodeEventArgs> onNodeEventReceived = (_, e) =>
                 {
                     if (e.NodeID == nodeID && e.Command.ClassID == command.ClassID && e.Command.CommandID == responseCommandID)
-                    {
                         if (payloadValidation == null || payloadValidation(e.Command.Payload))
-                        {
-                            // BugFix: 
+                            // BugFix:
                             // http://stackoverflow.com/questions/19481964/calling-taskcompletionsource-setresult-in-a-non-blocking-manner
                             Task.Run(() => completionSource.TrySetResult(e.Command));
-                        }
-                    }
                 };
 
                 var request = new NodeCommand(nodeID, command);
@@ -482,17 +440,14 @@ namespace ZWave.Channel
                 NodeEventReceived += onNodeEventReceived;
                 try
                 {
-                    await WaitForResponse((message) =>
-                    {
-                        return (message is NodeCommandCompleted && ((NodeCommandCompleted)message).CallbackID == request.CallbackID);
-                    }, cancellationToken).ConfigureAwait(false);
+                    await WaitForResponse(message => { return message is NodeCommandCompleted && ((NodeCommandCompleted) message).CallbackID == request.CallbackID; }, cancellationToken).ConfigureAwait(false);
 
                     try
                     {
                         using (var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                         {
                             cancellationTokenSource.CancelAfter(ResponseTimeout);
-                            cancellationTokenSource.Token.Register(() => completionSource.TrySetCanceled(), useSynchronizationContext: false);
+                            cancellationTokenSource.Token.Register(() => completionSource.TrySetCanceled(), false);
 
                             var response = await completionSource.Task.ConfigureAwait(false);
                             return response.Payload;
@@ -502,13 +457,15 @@ namespace ZWave.Channel
                     {
                         // Rethrow only if the external cancellation token was canceled.
                         //
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            throw;
-                        }
+                        if (cancellationToken.IsCancellationRequested) throw;
 
                         throw new TimeoutException();
                     }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    throw;
                 }
                 finally
                 {

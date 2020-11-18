@@ -61,7 +61,7 @@ namespace ZWave.Net
             if (getCommandClassMethod == null)
                 return CreateErrorResponse(context, $"Node: {nodeID} does not support CommandClass: {commandClassName}.");
 
-            // invoke method to get the commandclass instance 
+            // invoke method to get the commandclass instance
             var commandClass = getCommandClassMethod.Invoke(node, null);
 
             // get the commandClassName.operationName method
@@ -87,23 +87,23 @@ namespace ZWave.Net
                     {
                         // yes, so convert string to enum
                         var enumValue = Enum.Parse(parameter.ParameterType, queryParameterValue, true);
-                        
-                        // and add typed parameter to collection 
+
+                        // and add typed parameter to collection
                         argumentValues.Add(enumValue);
 
                         // done
                         continue;
                     }
 
-                    // convert string to typed parameter 
+                    // convert string to typed parameter
                     var argumentValue = Convert.ChangeType(queryParameterValue, parameter.ParameterType, CultureInfo.InvariantCulture);
-                    
-                    // and add typed parameter to collection 
+
+                    // and add typed parameter to collection
                     argumentValues.Add(argumentValue);
                 }
             }
 
-            // invoke het commandclass method: commandClass.operationName(p1, p2, p3, ...) 
+            // invoke het commandclass method: commandClass.operationName(p1, p2, p3, ...)
             var returnValue = invokeMethod.Invoke(commandClass, argumentValues.ToArray());
 
             // do we have a return value

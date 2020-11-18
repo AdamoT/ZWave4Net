@@ -5,12 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ZWave.Channel;
-using ZWave.CommandClasses;
-
 namespace ZWave
 {
-    public class Node
+    public class Node_Old
     {
         private static byte functionID = 0;
         private List<CommandClassBase> _commandClasses = new List<CommandClassBase>();
@@ -34,7 +31,7 @@ namespace ZWave
         /// </summary>
         public event EventHandler<EventArgs> MessageReceived;
 
-        public Node(byte nodeID, ZWaveController contoller)
+        public Node_Old(byte nodeID, ZWaveController contoller)
         {
             NodeID = nodeID;
             Controller = contoller;

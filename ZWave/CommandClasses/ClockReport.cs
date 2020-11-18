@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
@@ -11,15 +9,15 @@ namespace ZWave.CommandClasses
         public readonly byte Hour;
         public readonly byte Minute;
 
-        internal ClockReport(Node node, byte[] payload) : base(node)
+        internal ClockReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
             if (payload.Length < 2)
                 throw new ReponseFormatException($"The response was not in the expected format. {GetType().Name}: Payload: {BitConverter.ToString(payload)}");
 
-            var day = (byte)(payload[0] >> 5);
-            switch(day)
+            var day = (byte) (payload[0] >> 5);
+            switch (day)
             {
                 case 1:
                     DayOfWeek = DayOfWeek.Monday;
@@ -43,7 +41,8 @@ namespace ZWave.CommandClasses
                     DayOfWeek = DayOfWeek.Sunday;
                     break;
             }
-            Hour = (byte)(payload[0] & 0x1F);
+
+            Hour = (byte) (payload[0] & 0x1F);
             Minute = payload[1];
         }
 

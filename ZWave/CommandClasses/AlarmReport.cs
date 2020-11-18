@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ZWave.Channel;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
 {
     public class AlarmReport : NodeReport
     {
-        public AlarmType Type { get; private set; }
-        public byte Level { get; private set; }
-        public AlarmDetailType Detail { get; private set; }
-        public byte Unknown { get; private set; }
-
-        internal AlarmReport(Node node, byte[] payload) : base(node)
+        internal AlarmReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
@@ -21,17 +13,16 @@ namespace ZWave.CommandClasses
             if (payload.Length < 2)
                 throw new ReponseFormatException($"The response was not in the expected format. Report: {GetType().Name}, Payload: {BitConverter.ToString(payload)}");
 
-            Type = (AlarmType)payload[0];
+            Type = (AlarmType) payload[0];
             Level = payload[1];
-            if (payload.Length > 2)
-            {
-                Unknown = payload[2];
-            }
-            if (payload.Length > 5)
-            {
-                Detail = (AlarmDetailType)payload[5];
-            }
+            if (payload.Length > 2) Unknown = payload[2];
+            if (payload.Length > 5) Detail = (AlarmDetailType) payload[5];
         }
+
+        public AlarmType Type { get; }
+        public byte Level { get; }
+        public AlarmDetailType Detail { get; }
+        public byte Unknown { get; }
 
         public override string ToString()
         {

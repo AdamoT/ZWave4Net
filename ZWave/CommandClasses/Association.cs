@@ -1,26 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
-using System.Threading;
 
 namespace ZWave.CommandClasses
 {
-    public class Association : CommandClassBase
+    public class Association : CommandClassBase_OLD
     {
-        enum command
-        {
-            Set = 0x01,
-            Get = 0x02,
-            Report = 0x03,
-            Remove = 0x04,
-            GroupingsGet = 0x05,
-            GroupingsReport = 0x06
-        }
-
-        public Association(Node node) : base(node, CommandClass.Association)
+        public Association(IZwaveNode node) : base(node, CommandClass.Association)
         {
         }
 
@@ -42,7 +29,7 @@ namespace ZWave.CommandClasses
 
         public async Task Add(byte groupID, CancellationToken cancellationToken, params byte[] nodes)
         {
-            var payload = new byte[] { groupID }.Concat(nodes).ToArray();
+            var payload = new[] {groupID}.Concat(nodes).ToArray();
             await Channel.Send(Node, new Command(Class, command.Set, payload), cancellationToken);
         }
 
@@ -53,7 +40,7 @@ namespace ZWave.CommandClasses
 
         public async Task Remove(byte groupID, CancellationToken cancellationToken, params byte[] nodes)
         {
-            var payload = new byte[] { groupID }.Concat(nodes).ToArray();
+            var payload = new[] {groupID}.Concat(nodes).ToArray();
             await Channel.Send(Node, new Command(Class, command.Remove, payload), cancellationToken);
         }
 
@@ -66,6 +53,16 @@ namespace ZWave.CommandClasses
         {
             var response = await Channel.Send(Node, new Command(Class, command.GroupingsGet), command.GroupingsReport, cancellationToken);
             return new AssociationGroupsReport(Node, response);
+        }
+
+        private enum command
+        {
+            Set = 0x01,
+            Get = 0x02,
+            Report = 0x03,
+            Remove = 0x04,
+            GroupingsGet = 0x05,
+            GroupingsReport = 0x06
         }
     }
 }

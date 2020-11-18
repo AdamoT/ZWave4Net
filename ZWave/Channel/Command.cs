@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.Channel
@@ -41,15 +39,9 @@ namespace ZWave.Channel
             Payload = payload;
         }
 
-        public byte ClassID
-        {
-            get { return Convert.ToByte(_class); }
-        }
+        public byte ClassID => Convert.ToByte(_class);
 
-        public byte CommandID
-        {
-            get { return Convert.ToByte(_command); }
-        }
+        public byte CommandID => Convert.ToByte(_command);
 
         public override string ToString()
         {
@@ -64,7 +56,7 @@ namespace ZWave.Channel
             bytes.Add(ClassID);
             bytes.Add(CommandID);
             bytes.AddRange(Payload);
-            bytes[0] = (byte)(bytes.Count - 1);
+            bytes[0] = (byte) (bytes.Count - 1);
             return bytes.ToArray();
         }
 

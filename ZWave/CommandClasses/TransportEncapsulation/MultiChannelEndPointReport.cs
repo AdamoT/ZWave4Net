@@ -1,21 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using ZWave.Channel.Protocol;
 
-namespace ZWave.CommandClasses
+namespace ZWave.CommandClasses.TransportEncapsulation
 {
     public class MultiChannelEndPointReport : NodeReport
     {
-        public bool IsDynamicNumberOfEndpoints { get; }
-
-        public bool AllEndpointsAreIdentical { get; }
-
-        public byte NumberOfIndividualEndPoints { get; }
-
-        public byte NumberOfAggregatedEndPoints { get; }
-
-        public MultiChannelEndPointReport(Node node, byte[] payload)
+        public MultiChannelEndPointReport(IZwaveNode node, byte[] payload)
             : base(node)
         {
             if (payload == null)
@@ -29,7 +19,12 @@ namespace ZWave.CommandClasses
 
             // For version 4 only.
             //
-            NumberOfAggregatedEndPoints = payload.Length > 2 ? payload[2] : (byte)0;
+            NumberOfAggregatedEndPoints = payload.Length > 2 ? payload[2] : (byte) 0;
         }
+
+        public bool IsDynamicNumberOfEndpoints { get; }
+        public bool AllEndpointsAreIdentical { get; }
+        public byte NumberOfIndividualEndPoints { get; }
+        public byte NumberOfAggregatedEndPoints { get; }
     }
 }

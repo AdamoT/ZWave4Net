@@ -1,42 +1,19 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class MultiChannelAssociation : CommandClassBase
+    public class MultiChannelAssociation : CommandClassBase_OLD
     {
-        public class Endpoint
-        {
-            public byte NodeId { get; }
-
-            public byte EndpointId { get; }
-
-            public Endpoint(byte nodeId, byte endpointId)
-            {
-                NodeId = nodeId;
-                EndpointId = endpointId;
-            }
-        }
-
         private const byte MultiChannelAssociationSetMarker = 0;
         private const byte MultiChannelAssociationRemoveMarker = 0;
 
-        enum command
-        {
-            Set = 0x01,
-            Get = 0x02,
-            Report = 0x03,
-            Remove = 0x04,
-            GroupingsGet = 0x05,
-            GroupingsReport = 0x06
-        }
-
-        public MultiChannelAssociation(Node node)
+        public MultiChannelAssociation(IZwaveNode node)
             : base(node, CommandClass.MultiChannelAssociation)
-        { }
+        {
+        }
 
         public Task Add(byte groupId, byte[] destinationNodeIds, Endpoint[] destinationEndpoints)
         {
@@ -55,7 +32,7 @@ namespace ZWave.CommandClasses
 
         public async Task<MultiChannelAssociationReport> Get(byte groupId, CancellationToken cancellationToken)
         {
-            byte[] response = await Channel.Send(Node, new Command(Class, command.Get, groupId), command.Report, cancellationToken);
+            var response = await Channel.Send(Node, new Command(Class, command.Get, groupId), command.Report, cancellationToken);
             return new MultiChannelAssociationReport(Node, response);
         }
 
@@ -82,8 +59,31 @@ namespace ZWave.CommandClasses
 
         private static byte[] GetEndpointsPayload(byte groupId, byte[] destinationNodeIds, Endpoint[] destinationEndpoints, byte marker)
         {
-            IEnumerable<byte> endpointsPayload = destinationEndpoints.SelectMany(e => new byte[] { e.NodeId, e.EndpointId });
-            return new byte[] { groupId }.Concat(destinationNodeIds).Concat(new byte[] { marker }).Concat(endpointsPayload).ToArray();
+            var endpointsPayload = destinationEndpoints.SelectMany(e => new[] {e.NodeId, e.EndpointId});
+            return new[] {groupId}.Concat(destinationNodeIds).Concat(new[] {marker}).Concat(endpointsPayload).ToArray();
+        }
+
+        public class Endpoint
+        {
+            public Endpoint(byte nodeId, byte endpointId)
+            {
+                NodeId = nodeId;
+                EndpointId = endpointId;
+            }
+
+            public byte NodeId { get; }
+
+            public byte EndpointId { get; }
+        }
+
+        private enum command
+        {
+            Set = 0x01,
+            Get = 0x02,
+            Report = 0x03,
+            Remove = 0x04,
+            GroupingsGet = 0x05,
+            GroupingsReport = 0x06
         }
     }
 }

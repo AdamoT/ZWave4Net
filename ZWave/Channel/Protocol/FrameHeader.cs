@@ -1,27 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ZWave.Channel.Protocol
+﻿namespace ZWave.Channel.Protocol
 {
-    enum FrameHeader : byte
+    internal enum FrameHeader : byte
     {
         /// <summary>
-        /// Start of frame
+        ///     Start of frame
         /// </summary>
         SOF = 0x01,
+
         /// <summary>
-        /// Acknowledge
+        ///     Acknowledge
         /// </summary>
         ACK = 0x06,
+
         /// <summary>
-        /// Negative acknowledge
+        ///     Negative acknowledge
         /// </summary>
         NAK = 0x15,
+
         /// <summary>
-        /// Cancel
+        ///     Cancel
         /// </summary>
         CAN = 0x18
     }

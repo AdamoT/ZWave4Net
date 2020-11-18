@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
@@ -10,10 +8,10 @@ namespace ZWave.CommandClasses
     {
         public readonly byte GroupID;
         public readonly byte MaxNodesSupported;
-        public readonly byte ReportsToFollow;
         public readonly byte[] Nodes;
+        public readonly byte ReportsToFollow;
 
-        internal AssociationReport(Node node, byte[] payload) : base(node)
+        internal AssociationReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));

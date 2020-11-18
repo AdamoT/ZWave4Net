@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ZWave.Channel.Protocol
 {
-    class NodeEvent : Message
+    internal class NodeEvent : Message
     {
-        public readonly ReceiveStatus ReceiveStatus;
-        public readonly byte NodeID;
         public readonly Command Command;
+        public readonly byte NodeID;
+        public readonly ReceiveStatus ReceiveStatus;
 
         public NodeEvent(byte[] payload)
             : base(FrameHeader.SOF, MessageType.Response, Channel.Function.ApplicationCommandHandler)

@@ -1,26 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class Basic : CommandClassBase
+    public class Basic : CommandClassBase_OLD
     {
-        enum command : byte
+        public Basic(IZwaveNode node) : base(node, CommandClass.Basic)
         {
-            Set = 0x01,
-            Get = 0x02,
-            Report = 0x03
         }
 
         public event EventHandler<ReportEventArgs<BasicReport>> Changed;
-
-        public Basic(Node node) : base(node, CommandClass.Basic)
-        {
-        }
 
         public Task<BasicReport> Get()
         {
@@ -54,10 +45,14 @@ namespace ZWave.CommandClasses
         protected virtual void OnChanged(ReportEventArgs<BasicReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
+        }
+
+        private enum command : byte
+        {
+            Set = 0x01,
+            Get = 0x02,
+            Report = 0x03
         }
     }
 }

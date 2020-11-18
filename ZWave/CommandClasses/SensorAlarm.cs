@@ -1,27 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class SensorAlarm : CommandClassBase
+    public class SensorAlarm : CommandClassBase_OLD
     {
+        public SensorAlarm(IZwaveNode node) : base(node, CommandClass.SensorAlarm)
+        {
+        }
+
         public event EventHandler<ReportEventArgs<SensorAlarmReport>> Changed;
-
-        enum command
-        {
-            Get = 0x01,
-            Report = 0x02,
-            SupportedGet = 0x03,
-            SupportedReport = 0x04
-        }
-
-        public SensorAlarm(Node node) : base(node, CommandClass.SensorAlarm)
-        {
-        }
 
         public Task<SensorAlarmReport> Get(AlarmType type)
         {
@@ -45,11 +35,15 @@ namespace ZWave.CommandClasses
         protected virtual void OnChanged(ReportEventArgs<SensorAlarmReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
         }
 
+        private enum command
+        {
+            Get = 0x01,
+            Report = 0x02,
+            SupportedGet = 0x03,
+            SupportedReport = 0x04
+        }
     }
 }

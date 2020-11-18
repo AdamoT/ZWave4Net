@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using ZWave.Channel.Protocol;
 
 namespace ZWave.CommandClasses
 {
     public class VersionReport : NodeReport
     {
-        public readonly string Library;
         public readonly string Application;
+        public readonly string Library;
         public readonly string Protocol;
 
-        internal VersionReport(Node node, byte[] payload) : base(node)
+        internal VersionReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));

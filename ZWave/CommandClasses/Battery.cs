@@ -1,25 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class Battery : CommandClassBase
+    public class Battery : CommandClassBase_OLD
     {
-        enum command
+        public Battery(IZwaveNode node) : base(node, CommandClass.Battery)
         {
-            Get = 0x02,
-            Report = 0x03
         }
 
         public event EventHandler<ReportEventArgs<BatteryReport>> Changed;
-
-        public Battery(Node node) : base(node, CommandClass.Battery)
-        {
-        }
 
         public Task<BatteryReport> Get()
         {
@@ -43,10 +35,13 @@ namespace ZWave.CommandClasses
         protected virtual void OnChanged(ReportEventArgs<BatteryReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
+        }
+
+        private enum command
+        {
+            Get = 0x02,
+            Report = 0x03
         }
     }
 }

@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 using ZWave.Channel;
+using ZWave.Utils;
 
 namespace ZWave
 {
@@ -29,10 +29,12 @@ namespace ZWave
 
         #region Fields
 
-        private Task<IReadOnlyList<Node>> _GetNodesTask = null;
+        private Task<IReadOnlyList<IZwaveNode>> _GetNodesTask = null;
         private string _ControllerVersion = null;
         private uint? _ControllerHomeID;
         private byte? _ControllerNodeID;
+
+        private readonly AsyncLazyProperty<List<IZwaveNodeInternal>> _NodesProperty = null;
 
         #endregion Fields
 
@@ -48,6 +50,7 @@ namespace ZWave
         private ZWaveController(ZWaveChannel channel)
         {
             Channel = channel;
+            _NodesProperty = new AsyncLazyProperty<List<IZwaveNodeInternal>>(GetNodesInternal);
         }
 
         public ZWaveController(ISerialPort port)
@@ -55,21 +58,66 @@ namespace ZWave
         {
         }
 
-#if NET || WINDOWS_UWP || NETCOREAPP2_0 || NETSTANDARD2_0
+        #if NET || WINDOWS_UWP || NETCOREAPP2_0 || NETSTANDARD2_0
         public ZWaveController(string portName)
             : this(new ZWaveChannel(portName))
         {
         }
-#endif
+        #endif
 
-#if WINDOWS_UWP
+        #if WINDOWS_UWP
         public ZWaveController(ushort vendorId, ushort productId)
              : this(new ZWaveChannel(vendorId, productId))
         {
         }
-#endif
+        #endif
 
         #endregion Constructors
+
+        #region Public Methods
+
+        public async Task<IReadOnlyList<IZwaveNode>> RefreshNodes(CancellationToken cancellationToken = default)
+        {
+            var nodes = await _NodesProperty.RefreshValue()
+                .ConfigureAwait(false);
+            return nodes;
+        }
+
+        public async Task<IReadOnlyList<IZwaveNode>> GetNodes(CancellationToken cancellationToken = default)
+        {
+            var nodes = await _NodesProperty.GetValue()
+                .ConfigureAwait(false);
+            return nodes;
+        }
+
+        #endregion Public Methods
+
+        #region Private Methods
+
+        private Task<List<IZwaveNodeInternal>> GetNodesInternal(List<IZwaveNodeInternal> nodes, CancellationToken cancellationToken = default)
+        {
+            return Task.Run(async () =>
+            {
+                var response = await Channel.Send(Function.DiscoveryNodes, cancellationToken)
+                    .ConfigureAwait(false);
+                var values = response.Skip(3).Take(29).ToArray();
+
+                if (nodes == null)
+                    nodes = new List<IZwaveNodeInternal>();
+
+                var bits = new BitArray(values);
+                for (byte i = 0; i < bits.Length; i++)
+                    if (bits[i])
+                    {
+                        var node = new ZWaveNode((byte) (i + 1), this);
+                        nodes.Add(node);
+                    }
+
+                return nodes;
+            });
+        }
+
+        #endregion Private Methods
 
         private void OnError(ErrorEventArgs e)
         {
@@ -104,14 +152,11 @@ namespace ZWave
         {
             try
             {
-                var nodes = await GetNodes()
+                var nodes = await _NodesProperty.GetValue()
                     .ConfigureAwait(false);
 
-                var target = nodes[e.NodeID];
-                if (target != null)
-                {
-                    target.HandleEvent(e.Command);
-                }
+                var target = nodes.FirstOrDefault(x => x.NodeID == e.NodeID);
+                if (target != null) target.HandleEvent(e.Command);
             }
             catch (Exception ex)
             {
@@ -123,14 +168,11 @@ namespace ZWave
         {
             try
             {
-                var nodes = await GetNodes()
+                var nodes = await _NodesProperty.GetValue()
                     .ConfigureAwait(false);
 
-                var target = nodes[e.NodeID];
-                if (target != null)
-                {
-                    target.HandleUpdate();
-                }
+                var target = nodes.FirstOrDefault(x => x.NodeID == e.NodeID);
+                if (target != null) target.HandleUpdate();
             }
             catch (Exception ex)
             {
@@ -164,6 +206,7 @@ namespace ZWave
                 var data = response.TakeWhile(element => element != 0).ToArray();
                 _ControllerVersion = Encoding.UTF8.GetString(data, 0, data.Length);
             }
+
             return _ControllerVersion;
         }
 
@@ -181,6 +224,7 @@ namespace ZWave
 
                 _ControllerHomeID = PayloadConverter.ToUInt32(response);
             }
+
             return _ControllerHomeID.Value;
         }
 
@@ -197,44 +241,8 @@ namespace ZWave
                     .ConfigureAwait(false);
                 _ControllerNodeID = response[4];
             }
+
             return _ControllerNodeID.Value;
-        }
-
-        public Task<IReadOnlyList<Node>> DiscoverNodes()
-        {
-            return DiscoverNodes(CancellationToken.None);
-        }
-
-        public Task<IReadOnlyList<Node>> DiscoverNodes(CancellationToken cancellationToken)
-        {
-            return _GetNodesTask = Task.Run(async () =>
-            {
-                var response = await Channel.Send(Function.DiscoveryNodes, cancellationToken)
-                    .ConfigureAwait(false);
-                var values = response.Skip(3).Take(29).ToArray();
-
-                var nodes = new List<Node>();
-                var bits = new BitArray(values);
-                for (byte i = 0; i < bits.Length; i++)
-                {
-                    if (bits[i])
-                    {
-                        var node = new Node((byte)(i + 1), this);
-                        nodes.Add(node);
-                    }
-                }
-                return nodes as IReadOnlyList<Node>;
-            });
-        }
-
-        public Task<IReadOnlyList<Node>> GetNodes()
-        {
-            return GetNodes(CancellationToken.None);
-        }
-
-        public Task<IReadOnlyList<Node>> GetNodes(CancellationToken cancellationToken)
-        {
-            return (_GetNodesTask ?? DiscoverNodes(cancellationToken));
         }
     }
 }

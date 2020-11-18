@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave.CommandClasses
+﻿namespace ZWave.CommandClasses
 {
     public class ColorComponent
     {
@@ -22,7 +18,7 @@ namespace ZWave.CommandClasses
 
         public byte[] ToBytes()
         {
-            return new[] { ID, Value };
+            return new[] {ID, Value};
         }
     }
 }

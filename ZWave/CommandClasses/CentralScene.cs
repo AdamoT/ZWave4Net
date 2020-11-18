@@ -1,26 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class CentralScene : CommandClassBase
+    public class CentralScene : CommandClassBase_OLD
     {
-        enum command
+        public CentralScene(IZwaveNode node) : base(node, CommandClass.CentralScene)
         {
-            SupportedGet = 0x01,
-            SupportedReport = 0x02,
-            Notification = 0x03,
         }
 
         public event EventHandler<ReportEventArgs<CentralSceneReport>> Changed;
-
-        public CentralScene(Node node) : base(node, CommandClass.CentralScene)
-        {
-        }
 
         public Task<CentralSceneSupportedReport> GetSupportedScenes()
         {
@@ -47,10 +38,14 @@ namespace ZWave.CommandClasses
         protected virtual void OnChanged(ReportEventArgs<CentralSceneReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
+        }
+
+        private enum command
+        {
+            SupportedGet = 0x01,
+            SupportedReport = 0x02,
+            Notification = 0x03
         }
     }
 }

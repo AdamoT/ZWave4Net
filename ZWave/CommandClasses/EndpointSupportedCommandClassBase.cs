@@ -2,31 +2,31 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using ZWave.Channel;
 using ZWave.Channel.Protocol;
+using ZWave.CommandClasses.TransportEncapsulation;
 
 namespace ZWave.CommandClasses
 {
-    public abstract class EndpointSupportedCommandClassBase : CommandClassBase
+    public abstract class EndpointSupportedCommandClassBase : CommandClassBase_OLD
     {
-        public byte EndPoint { get; }
-
-        protected EndpointSupportedCommandClassBase(Node node, CommandClass commandClass) :
+        protected EndpointSupportedCommandClassBase(IZwaveNode node, CommandClass commandClass) :
             this(node, commandClass, 0)
         {
         }
 
         /// <summary>
-        /// Use this constructor if this command class can be accessed only with endpoint id.
+        ///     Use this constructor if this command class can be accessed only with endpoint id.
         /// </summary>
         /// <param name="node">The node</param>
         /// <param name="endpointId">The endpoint id. 0 means there is no endpoint.</param>
-        protected EndpointSupportedCommandClassBase(Node node, CommandClass commandClass, byte endpointId)
+        protected EndpointSupportedCommandClassBase(IZwaveNode node, CommandClass commandClass, byte endpointId)
             : base(node, commandClass)
         {
             EndPoint = endpointId;
         }
+
+        public byte EndPoint { get; }
 
         protected async Task<byte[]> Send(Command command, Enum responseCommand, CancellationToken cancellationToken)
         {
@@ -36,12 +36,10 @@ namespace ZWave.CommandClasses
                 //
                 return await Channel.Send(Node, command, responseCommand, cancellationToken);
             }
-            else
-            {
-                Command encapsolatedCommand = await EncapsulatCommandForEndpoint(command, cancellationToken);
-                byte[] response = await Channel.Send(Node, encapsolatedCommand, MultiChannel.command.Encap, EncapsulatCommandEndpointValidator(responseCommand), cancellationToken);
-                return ExtractEndpointResponse(response, responseCommand);
-            }
+
+            var encapsolatedCommand = await EncapsulatCommandForEndpoint(command, cancellationToken);
+            var response = await Channel.Send(Node, encapsolatedCommand, MultiChannel.CommandV3.Encap, EncapsulatCommandEndpointValidator(responseCommand), cancellationToken);
+            return ExtractEndpointResponse(response, responseCommand);
         }
 
         protected async Task Send(Command command, CancellationToken cancellationToken)
@@ -54,7 +52,7 @@ namespace ZWave.CommandClasses
             }
             else
             {
-                Command encapsolatedCommand = await EncapsulatCommandForEndpoint(command, cancellationToken);
+                var encapsolatedCommand = await EncapsulatCommandForEndpoint(command, cancellationToken);
                 await Channel.Send(Node, encapsolatedCommand, cancellationToken);
             }
         }
@@ -66,21 +64,18 @@ namespace ZWave.CommandClasses
 
         private async Task<Command> EncapsulatCommandForEndpoint(Command command, CancellationToken cancellationToken)
         {
-            byte controllerId = await Node.Controller.GetNodeID(cancellationToken);
+            var controllerId = await Node.Controller.GetNodeID(cancellationToken);
 
             // Encapsulation have additional 4 params.
             const int encapsolationEdditionalParams = 4;
-            byte[] payload = new byte[command.Payload.Length + encapsolationEdditionalParams];
+            var payload = new byte[command.Payload.Length + encapsolationEdditionalParams];
             payload[0] = controllerId;
             payload[1] = EndPoint;
             payload[2] = command.ClassID;
             payload[3] = command.CommandID;
-            for (int i = 0; i < command.Payload.Length; i++)
-            {
-                payload[i + encapsolationEdditionalParams] = command.Payload[i];
-            }
+            for (var i = 0; i < command.Payload.Length; i++) payload[i + encapsolationEdditionalParams] = command.Payload[i];
 
-            return new Command(CommandClass.MultiChannel, MultiChannel.command.Encap, payload);
+            return new Command(CommandClass.MultiChannel, MultiChannel.CommandV3.Encap, payload);
         }
 
         private byte[] ExtractEndpointResponse(byte[] response, Enum expectedResponseCommand)
@@ -95,10 +90,7 @@ namespace ZWave.CommandClasses
             if (response[0] != EndPoint)
                 throw new ReponseFormatException($"Got response for endpoint id {response[0]}, while this command class serves endpoint {EndPoint}.");
 
-            if (response[2] != Convert.ToByte(Class) || response[3] != Convert.ToByte(expectedResponseCommand))
-            {
-                throw new ReponseFormatException($"Got unexpected response for encapsolate message for command class {GetType().Name}. The response was for class {response[2]}, and was of type {response[3]}.");
-            }
+            if (response[2] != Convert.ToByte(Class) || response[3] != Convert.ToByte(expectedResponseCommand)) throw new ReponseFormatException($"Got unexpected response for encapsolate message for command class {GetType().Name}. The response was for class {response[2]}, and was of type {response[3]}.");
 
             return response.Skip(4).ToArray();
         }

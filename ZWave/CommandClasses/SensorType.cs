@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave.CommandClasses
+﻿namespace ZWave.CommandClasses
 {
     public enum SensorType : byte
     {
@@ -37,6 +33,6 @@ namespace ZWave.CommandClasses
         ElectricalResistivity = 0x1C,
         ElectricalConductivity = 0x1D,
         Loudness = 0x1E,
-        Moisture = 0x1F,
-    };
+        Moisture = 0x1F
+    }
 }

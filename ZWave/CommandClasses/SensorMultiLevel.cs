@@ -9,34 +9,17 @@ namespace ZWave.CommandClasses
     {
         private const int GetSupportedSensorsMinimalProtocolVersion = 5;
 
-        public event EventHandler<ReportEventArgs<SensorMultiLevelReport>> Changed;
-
-        enum command
-        {
-            SupportedGet = 0x01,
-            SupportedReport = 0x02,
-            Get = 0x04,
-            Report = 0x05
-        }
-
-        public SensorMultiLevel(Node node)
+        public SensorMultiLevel(IZwaveNode node)
             : base(node, CommandClass.SensorMultiLevel)
-        { }
+        {
+        }
 
-        internal SensorMultiLevel(Node node, byte endpointId)
+        internal SensorMultiLevel(IZwaveNode node, byte endpointId)
             : base(node, CommandClass.SensorMultiLevel, endpointId)
-        { }
-
-        public Task<bool> IsSupportGetSupportedSensors()
         {
-            return IsSupportGetSupportedSensors(CancellationToken.None);
         }
 
-        public async Task<bool> IsSupportGetSupportedSensors(CancellationToken cancellationToken)
-        {
-            var report = await Node.GetCommandClassVersionReport(Class, cancellationToken);
-            return report.Version >= GetSupportedSensorsMinimalProtocolVersion;
-        }
+        public event EventHandler<ReportEventArgs<SensorMultiLevelReport>> Changed;
 
         public Task<SensorMultilevelSupportedSensorReport> GetSupportedSensors()
         {
@@ -45,11 +28,6 @@ namespace ZWave.CommandClasses
 
         public async Task<SensorMultilevelSupportedSensorReport> GetSupportedSensors(CancellationToken cancellationToken)
         {
-            if (!await IsSupportGetSupportedSensors(cancellationToken))
-            {
-                throw new VersionNotSupportedException($"GetSupportedSensors works with class type {Class} greater or equal to {GetSupportedSensorsMinimalProtocolVersion}.");
-            }
-
             var response = await Send(new Command(Class, command.SupportedGet), command.SupportedReport, cancellationToken);
             return new SensorMultilevelSupportedSensorReport(Node, response);
         }
@@ -61,7 +39,7 @@ namespace ZWave.CommandClasses
 
         public async Task<SensorMultiLevelReport> Get(SensorType type, CancellationToken cancellationToken)
         {
-            var response = await Send(new Command(Class, command.Get, (byte)type), command.Report, cancellationToken);
+            var response = await Send(new Command(Class, command.Get, (byte) type), command.Report, cancellationToken);
             return new SensorMultiLevelReport(Node, response);
         }
 
@@ -76,11 +54,15 @@ namespace ZWave.CommandClasses
         protected virtual void OnChanged(ReportEventArgs<SensorMultiLevelReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
         }
 
+        private enum command
+        {
+            SupportedGet = 0x01,
+            SupportedReport = 0x02,
+            Get = 0x04,
+            Report = 0x05
+        }
     }
 }

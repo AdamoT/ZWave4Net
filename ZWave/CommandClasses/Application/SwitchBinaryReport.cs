@@ -1,29 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using ZWave.Channel;
 using ZWave.Channel.Protocol;
 
-namespace ZWave.CommandClasses
+namespace ZWave.CommandClasses.Application
 {
     public class SwitchBinaryReport : NodeReport
     {
-        public readonly bool Value;
-
-        internal SwitchBinaryReport(Node node, byte[] payload) : base(node)
+        internal SwitchBinaryReport(IZwaveNode node, byte[] payload) : base(node)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload));
             if (payload.Length < 1)
                 throw new ReponseFormatException($"The response was not in the expected format. {GetType().Name}: Payload: {BitConverter.ToString(payload)}");
 
-            Value = payload[0] == 0xFF;
+            CurrentValue = payload[0] == 0xFF;
         }
+
+        public bool CurrentValue { get; }
 
         public override string ToString()
         {
-            return $"Value:{Value}";
+            return $"CurrentValue: {CurrentValue}";
         }
     }
 }

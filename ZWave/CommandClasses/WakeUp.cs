@@ -1,28 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZWave.Channel;
 
 namespace ZWave.CommandClasses
 {
-    public class WakeUp : CommandClassBase
+    public class WakeUp : CommandClassBase_OLD
     {
+        public WakeUp(IZwaveNode node) : base(node, CommandClass.WakeUp)
+        {
+        }
+
         public event EventHandler<ReportEventArgs<WakeUpReport>> Changed;
-
-        enum command
-        {
-            IntervalSet = 0x04,
-            IntervalGet = 0x05,
-            IntervalReport = 0x06,
-            Notification = 0x07,
-            NoMoreInformation = 0x08
-        }
-
-        public WakeUp(Node node) : base(node, CommandClass.WakeUp)
-        {
-        }
 
         public Task<WakeUpIntervalReport> GetInterval()
         {
@@ -42,7 +31,7 @@ namespace ZWave.CommandClasses
 
         public async Task SetInterval(TimeSpan interval, byte targetNodeID, CancellationToken cancellationToken)
         {
-            var seconds = PayloadConverter.GetBytes((uint)interval.TotalSeconds);
+            var seconds = PayloadConverter.GetBytes((uint) interval.TotalSeconds);
             await Channel.Send(Node, new Command(Class, command.IntervalSet, seconds[1], seconds[2], seconds[3], targetNodeID), cancellationToken);
         }
 
@@ -64,17 +53,22 @@ namespace ZWave.CommandClasses
             {
                 var report = new WakeUpReport(Node);
                 OnChanged(new ReportEventArgs<WakeUpReport>(report));
-                return;
             }
         }
 
         protected virtual void OnChanged(ReportEventArgs<WakeUpReport> e)
         {
             var handler = Changed;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
+            if (handler != null) handler(this, e);
+        }
+
+        private enum command
+        {
+            IntervalSet = 0x04,
+            IntervalGet = 0x05,
+            IntervalReport = 0x06,
+            Notification = 0x07,
+            NoMoreInformation = 0x08
         }
     }
 }

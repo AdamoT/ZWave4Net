@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ZWave.CommandClasses
+﻿namespace ZWave.CommandClasses
 {
     public enum AlarmDetailType : byte
     {
@@ -14,6 +10,6 @@ namespace ZWave.CommandClasses
         GlassBreakage = 5,
         GlassBreakageUnknownLocation = 6,
         MotionDetection = 7,
-        MotionDetectionUnknownLocation = 8,
-    };
+        MotionDetectionUnknownLocation = 8
+    }
 }
